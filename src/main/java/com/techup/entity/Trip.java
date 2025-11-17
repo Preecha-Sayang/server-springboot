@@ -1,68 +1,61 @@
 package com.techup.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
+import lombok.*;
+
 
 @Entity 
-@Table(name = "trips") 
-@Data 
-@NoArgsConstructor 
-@AllArgsConstructor 
-@Builder 
+@Table(name = "trips")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Trip {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
-    
+
     @Column(name = "photos", columnDefinition = "TEXT[]")
     private String[] photos;
-    
+
     @Column(name = "tags", columnDefinition = "TEXT[]")
     private String[] tags;
-    
-    @Column(name = "latitude")
+
     private Double latitude;
-    
-    @Column(name = "longitude")
     private Double longitude;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id")
     private User author;
-    
-    @Column(name = "created_at", updatable = false)
+
+    @Column(updatable = false)
     private LocalDateTime createdAt;
-    
-    @Column(name = "updated_at")
+
     private LocalDateTime updatedAt;
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        
-        // กำหนดค่า default สำหรับ arrays
-        if (photos == null) {
-            photos = new String[]{};
-        }
-        if (tags == null) {
-            tags = new String[]{};
-        }
+        if (photos == null) photos = new String[]{};
+        if (tags == null) tags = new String[]{};
     }
-    
+
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 }
+
 
 
 // -- ตารางทริป (เพิ่ม location)

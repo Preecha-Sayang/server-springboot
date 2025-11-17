@@ -5,12 +5,17 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.lang.NonNull;  // เพิ่มบรรทัดนี้
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TripRepository extends JpaRepository<Trip, Long> { 
+    
+    // Override save() เพื่อบังคับ @NonNull
+    @NonNull
+    @Override
+    <S extends Trip> S save(@NonNull S entity);
     
     // หาทริปตาม author_id
     List<Trip> findByAuthorId(Long authorId);
@@ -18,8 +23,6 @@ public interface TripRepository extends JpaRepository<Trip, Long> {
     // หาทริปที่มี title ตรงกัน (ค้นหาแบบไม่สนใจตัวพิมพ์)
     List<Trip> findByTitleContainingIgnoreCase(String title);
     
-    // หาทริปจาก id (มีอยู่แล้วจาก JpaRepository แต่ใส่ไว้เพื่อความชัดเจน)
-    Optional<Trip> findById(Long id);
     
     // ค้นหาทริปที่มี tag นี้ (PostgreSQL array operator)
     @Query(value = "SELECT * FROM trips WHERE :tag = ANY(tags)", nativeQuery = true)
