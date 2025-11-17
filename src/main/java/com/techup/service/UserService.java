@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
         user.setDisplayName(request.getDisplayName());
-        user.setCreatedAt(LocalDateTime.now());
+        user.setCreatedAt(OffsetDateTime.now());
 
         userRepository.save(user);
         return toResponse(user);
@@ -51,6 +51,7 @@ public class UserService {
                 .id(user.getId())
                 .email(user.getEmail())
                 .displayName(user.getDisplayName())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }
