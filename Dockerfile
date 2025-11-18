@@ -1,5 +1,5 @@
 # ---------- BUILD STAGE ----------
-FROM maven:3.9-eclipse-temurin-25 AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy POM and download dependencies (cacheable)
@@ -10,15 +10,15 @@ RUN mvn -q -DskipTests dependency:go-offline
 COPY src ./src
 
 # Build JAR
-RUN mvn -q -DskipTests package
+RUN mvn -q -DskipTests clean package
 
 # ---------- RUNTIME STAGE ----------
-FROM eclipse-temurin:25-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Environment variables
 ENV PORT=8080
-ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom"
+ENV JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -Xmx512m -Xms256m"
 
 # Copy final jar
 COPY --from=build /app/target/*.jar app.jar
