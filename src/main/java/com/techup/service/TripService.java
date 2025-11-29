@@ -22,9 +22,7 @@ public class TripService {
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
 
-    // ----------------- Visitor Methods -----------------
-
-    /** ดูรายการทริปทั้งหมด */
+    // ดูรายการทริปทั้งหมด
     public List<TripResponse> getAllTrips() {
         List<Trip> trips = tripRepository.findAll();
         List<TripResponse> responseList = new ArrayList<>();
@@ -34,14 +32,14 @@ public class TripService {
         return responseList;
     }
 
-    /** ดูรายละเอียดทริปตาม id */
+    // ดูรายละเอียดทริปตาม id
     public TripResponse getTripById(@NonNull Long id) {
         Trip trip = tripRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
         return toResponse(trip);
     }
 
-    /** ค้นหาทริปตาม keyword */
+    // ค้นหาทริปตาม keyword
     public List<TripResponse> searchByKeyword(@NonNull String keyword) {
         List<Trip> trips = tripRepository.searchByKeyword(keyword);
         List<TripResponse> responseList = new ArrayList<>();
@@ -51,9 +49,7 @@ public class TripService {
         return responseList;
     }
 
-    // ----------------- Authenticated User Methods -----------------
-
-    /** สร้างทริปใหม่ */
+    // สร้างทริปใหม่
     @SuppressWarnings("null")
     public TripResponse createTrip(@NonNull TripRequest request) {
         Long authorId = request.getAuthorId();
@@ -76,12 +72,12 @@ public class TripService {
         return toResponse(savedTrip);
     }
 
-    /** แก้ไขทริป (ต้องเป็นเจ้าของ) */
+    // แก้ไขทริป (ต้องเป็นเจ้าของ)
     public TripResponse updateTrip(@NonNull Long tripId, @NonNull TripRequest request, @NonNull Long userId) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
-        // ตรวจสอบสิทธิ์
+        // ✅ ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของทริป
         if (trip.getAuthor() == null || !trip.getAuthor().getId().equals(userId)) {
             throw new RuntimeException("You are not authorized to edit this trip");
         }
@@ -97,11 +93,12 @@ public class TripService {
         return toResponse(savedTrip);
     }
 
-    /** ลบทริป (ต้องเป็นเจ้าของ) */
+    // ลบทริป (ต้องเป็นเจ้าของ)
     public void deleteTrip(@NonNull Long tripId, @NonNull Long userId) {
         Trip trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new RuntimeException("Trip not found"));
 
+        // ✅ ตรวจสอบสิทธิ์: ต้องเป็นเจ้าของทริป
         if (trip.getAuthor() == null || !trip.getAuthor().getId().equals(userId)) {
             throw new RuntimeException("You are not authorized to delete this trip");
         }
@@ -109,7 +106,7 @@ public class TripService {
         tripRepository.delete(trip);
     }
 
-    // ----------------- Helper Method -----------------
+    // Helper Method
     private TripResponse toResponse(Trip trip) {
         Long authorId = trip.getAuthor() != null ? trip.getAuthor().getId() : null;
 

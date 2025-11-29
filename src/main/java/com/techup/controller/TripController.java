@@ -2,6 +2,7 @@ package com.techup.controller;
 
 import com.techup.dto.TripRequest;
 import com.techup.dto.TripResponse;
+import com.techup.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.techup.service.TripService;
@@ -13,6 +14,7 @@ import java.util.List;
 public class TripController {
 
     private final TripService tripService;
+    private final JwtService jwtService;
 
     // ----------------- Visitor APIs -----------------
 
@@ -38,22 +40,50 @@ public class TripController {
 
     // สร้างทริปใหม่ (ต้อง login)
     @PostMapping
-    public TripResponse createTrip(@RequestBody TripRequest request) {
+    public TripResponse createTrip(@RequestBody TripRequest request, @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserIdFromHeader(authHeader);
+        if (userId == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        request.setAuthorId(userId);
         return tripService.createTrip(request);
     }
 
-    // แก้ไขทริปตัวเอง
+    // แก้ไขทริปตัวเอง (ดึง userId จาก token โดยอัตโนมัติ)
     @PutMapping("/{id}")
     public TripResponse updateTrip(
             @PathVariable Long id,
             @RequestBody TripRequest request,
-            @RequestParam Long authorId) { // เพิ่ม authorId
-        return tripService.updateTrip(id, request, authorId);
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserIdFromHeader(authHeader);
+        if (userId == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        return tripService.updateTrip(id, request, userId);
     }
 
-    // ลบทริปตัวเอง
+    // ลบทริปตัวเอง (ดึง userId จาก token โดยอัตโนมัติ)
     @DeleteMapping("/{id}")
-    public void deleteTrip(@PathVariable Long id, @RequestParam Long authorId) {
-        tripService.deleteTrip(id, authorId);
+    public void deleteTrip(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long userId = extractUserIdFromHeader(authHeader);
+        if (userId == null) {
+            throw new RuntimeException("User not authenticated");
+        }
+        tripService.deleteTrip(id, userId);
+    }
+
+    // Helper method: ดึง userId จาก JWT token
+    private Long extractUserIdFromHeader(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
+        }
+        String token = authHeader.substring(7);
+        try {
+            return jwtService.getUserId(token);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

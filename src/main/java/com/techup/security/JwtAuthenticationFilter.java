@@ -22,7 +22,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    // เพิ่ม @Lazy ตรงนี้!!!
     public JwtAuthenticationFilter(
             JwtService jwtService,
             @Lazy UserDetailsService userDetailsService) {
@@ -39,7 +38,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // ข้าม path ที่ไม่ต้อง authentication
-        if (path.startsWith("/api/trips") || path.startsWith("/api/users")) {
+        if (path.startsWith("/api/users/register") || 
+            path.startsWith("/api/users/login") || 
+            path.startsWith("/api/trips")) {
             filterChain.doFilter(request, response);
             return;
         }

@@ -5,6 +5,7 @@ import com.techup.dto.UserResponse;
 import com.techup.dto.UserLoginRequest;
 import com.techup.entity.User;
 import com.techup.repository.UserRepository;
+import com.techup.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -16,6 +17,7 @@ import java.time.OffsetDateTime;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final JwtService jwtService;  // เพิ่มนี้
 
     // Register
     public UserResponse register(UserRequest request) {
@@ -30,7 +32,10 @@ public class UserService {
         user.setCreatedAt(OffsetDateTime.now());
 
         userRepository.save(user);
-        return toResponse(user);
+        
+        // สร้าง token เมื่อ register
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        return toResponse(user, token);
     }
 
     // Login
@@ -42,16 +47,19 @@ public class UserService {
             throw new RuntimeException("Invalid password");
         }
 
-        return toResponse(user);
+        // สร้าง token เมื่อ login
+        String token = jwtService.generateToken(user.getId(), user.getEmail());
+        return toResponse(user, token);
     }
 
-    // Mapping entity → DTO
-    private UserResponse toResponse(User user) {
+    // Mapping entity → DTO (with token)
+    private UserResponse toResponse(User user, String token) {
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .displayName(user.getDisplayName())
                 .createdAt(user.getCreatedAt())
+                .token(token)  // เพิ่ม token ในตรงนี้
                 .build();
     }
 }

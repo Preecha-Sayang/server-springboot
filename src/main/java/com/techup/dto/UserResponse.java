@@ -10,4 +10,5 @@ public class UserResponse {
     private String email;
     private String displayName;
     private OffsetDateTime createdAt;
+    private String token;  // เพิ่มฟิลด์นี้
 }
