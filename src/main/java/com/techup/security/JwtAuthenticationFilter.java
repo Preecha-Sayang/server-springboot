@@ -10,7 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -29,52 +28,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
-    @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+@Override
+protected void doFilterInternal(
+        @NonNull HttpServletRequest request,
+        @NonNull HttpServletResponse response,
+        @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+    final String authHeader = request.getHeader("Authorization");
+    final String jwt;
 
-        // ข้าม path ที่ไม่ต้อง authentication
-        if (path.startsWith("/api/users/register") || 
-            path.startsWith("/api/users/login") || 
-            path.startsWith("/api/trips")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userEmail;
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        jwt = authHeader.substring(7);
-
-        try {
-            userEmail = jwtService.extractEmail(jwt);
-
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-
-                if (jwtService.isTokenValid(jwt)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                }
-            }
-        } catch (Exception e) {
-            logger.debug("JWT token validation failed: " + e.getMessage());
-        }
-
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
         filterChain.doFilter(request, response);
+        return;
     }
+
+    jwt = authHeader.substring(7);
+
+    try {
+        Long userId = jwtService.getUserId(jwt); // ดึงจาก token
+        String email = jwtService.extractEmail(jwt);
+
+        if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+            // Load UserDetails
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(email);
+
+            // สร้าง UsernamePasswordAuthenticationToken
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+            // เก็บ userId ใน principal (cast ใน CustomUserDetails ถ้าต้องการ)
+            // หรือเก็บไว้ใน details map
+            authToken.setDetails(userId);
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
+
+    } catch (Exception e) {
+        logger.debug("JWT token validation failed: " + e.getMessage());
+    }
+
+    filterChain.doFilter(request, response);
+}
 }
