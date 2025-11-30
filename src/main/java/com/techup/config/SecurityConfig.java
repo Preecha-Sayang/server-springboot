@@ -11,7 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
+
 import java.util.List;
 
 @Configuration
@@ -19,7 +19,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // เพิ่ม @Lazy ตรงนี้!!!
     public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
@@ -30,21 +29,16 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-
-                    // ------ Public (ไม่ต้อง Login) ------
-                    .requestMatchers(HttpMethod.GET, "/api/trips/**").permitAll()
+                    // Public endpoints
+                    .requestMatchers("/api/trips/**").permitAll()
                     .requestMatchers("/api/users/**").permitAll()
 
-                    // ------ Protected (ต้อง Login) ------
-                    .requestMatchers(HttpMethod.POST, "/api/trips/**").authenticated()
-                    .requestMatchers(HttpMethod.PUT, "/api/trips/**").authenticated()
-                    .requestMatchers(HttpMethod.DELETE, "/api/trips/**").authenticated()
-
+                    // Protected endpoints
                     .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> httpBasic.disable())
-            .sessionManagement(session -> session
-                    .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.STATELESS)
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -54,13 +48,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+
+        // ⚡ ระบุ origin ของ frontend แทน *
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",   // สำหรับ dev
+                "https://your-frontend-domain.com"  // สำหรับ production
+        ));
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true); // ต้องเป็น true ถ้าใช้ JWT
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
     }
 
