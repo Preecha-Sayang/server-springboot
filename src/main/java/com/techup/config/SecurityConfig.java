@@ -32,7 +32,6 @@ public class SecurityConfig {
                     // Public GET endpoints
                     .requestMatchers("/api/trips/**").permitAll()
                     .requestMatchers("/api/users/**").permitAll()
-
                     // Protected POST/PUT/DELETE
                     .anyRequest().authenticated()
             )
@@ -49,14 +48,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Dev + production frontend domain
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://your-frontend-domain.com"
-        ));
+        // ใช้ * เป็น allowed origin เพราะ JWT header ไม่ต้องใช้ credentials
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(false); // ต้อง false เพราะ JWT header ไม่ใช้ cookies
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
