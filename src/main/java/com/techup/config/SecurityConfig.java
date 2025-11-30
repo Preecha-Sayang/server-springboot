@@ -33,6 +33,10 @@ public class SecurityConfig {
                         // Public GET endpoints
                         .requestMatchers(HttpMethod.GET, "/api/trips/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+                            // ✅ Public POST endpoints (เพิ่มบรรทัดนี้)
+                        .requestMatchers(HttpMethod.POST, "/api/users/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
+
                         // Protected POST/PUT/DELETE
                         .anyRequest().authenticated())
                 .httpBasic(httpBasic -> httpBasic.disable())
