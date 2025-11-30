@@ -29,11 +29,11 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                    // Public endpoints
+                    // Public GET endpoints
                     .requestMatchers("/api/trips/**").permitAll()
                     .requestMatchers("/api/users/**").permitAll()
 
-                    // Protected endpoints
+                    // Protected POST/PUT/DELETE
                     .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> httpBasic.disable())
@@ -49,19 +49,17 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // ⚡ ระบุ origin ของ frontend แทน *
+        // Dev + production frontend domain
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",   // สำหรับ dev
-                "https://your-frontend-domain.com"  // สำหรับ production
+                "http://localhost:5173",
+                "https://your-frontend-domain.com"
         ));
-
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        config.setAllowCredentials(true); // ต้องเป็น true ถ้าใช้ JWT
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 
