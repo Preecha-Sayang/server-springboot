@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         // ⚡ ข้าม public GET request และ CORS preflight
-        if ((path.startsWith("/api/trips") && method.equals("GET")) ||
+        if (((path.equals("/api/trips") || path.matches("/api/trips/.*")) && method.equals("GET")) ||
             (path.startsWith("/api/users") && method.equals("GET")) ||
             (path.startsWith("/api/users/register") && method.equals("POST")) ||
             (path.startsWith("/api/users/login") && method.equals("POST")) ||
